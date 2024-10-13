@@ -178,7 +178,139 @@ for i, reward_row in enumerate(total_rewards):
 ## Задание 3
 ### Настроить на сцене Unity воспроизведение звуковых файлов, описывающих динамику изменения выбранной переменной.
 
-  ![Github](https://github.com/MidoriKsai/Homework/blob/main/Github_hw.png)
+Я написала код, который загружает информацию о монетах, полученных за разные действия в игре: подбор монет с зомби, попадание по зомби(для коллектора), сбор монет из сундука, убийство босса. В зависимости от случайно выбранного действия, он воспроизводит соответствующий звук и выводит сообщение в консоль с информацией о количестве полученных монет и волне. После каждого звука выбирается новое случайное действие.
+
+```csharp
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Networking;
+using SimpleJSON;
+
+public class NewBehaviourScript : MonoBehaviour
+{
+    public AudioClip coinPickup;
+    public AudioClip bossKill;
+    public AudioClip hitZombie;
+    public AudioClip chestCollect;
+
+    private AudioSource audioSource;
+    private Dictionary<string, List<float>> dataSet = new Dictionary<string, List<float>>();
+    private bool statusStart = false;
+    private int i = 1;
+    private int r = -1;
+
+    void Start()
+    {
+        StartCoroutine(GoogleSheets());
+        r = Random.Range(0,4);
+    }
+
+   void Update()
+    {
+        if (r == 0 & statusStart == false & i != dataSet.Count && dataSet.Count > 0)
+        {
+            StartCoroutine(PlayCoinPickup());
+            Debug.Log($"Подобрано {dataSet[i.ToString()][0]} монет с зомби на волне {i}");
+        }
+
+        if (r == 1 & statusStart == false & i != dataSet.Count && dataSet.Count > 0)
+        {
+            StartCoroutine(PlayHitZombie());
+            Debug.Log($"Получено {dataSet[i.ToString()][1]} монет при попадании по зомби на волне {i}");
+        }
+
+        if (r == 2 & statusStart == false & i != dataSet.Count && dataSet.Count > 0)
+        {
+            StartCoroutine(PlayChestCollect());
+            Debug.Log($"Подобрано {dataSet[i.ToString()][2]} монет с сундука на волне {i}");
+        }
+
+        if (r == 3 & statusStart == false & i != dataSet.Count && dataSet.Count > 0)
+        {
+            StartCoroutine(PlayBossKill());
+            Debug.Log($"Подобрано {dataSet[i.ToString()][3]} монет после убийства босса зомби на волне {i}");
+        }
+    }
+
+
+    IEnumerator GoogleSheets()
+    {
+
+        UnityWebRequest curentResp = UnityWebRequest.Get("https://sheets.googleapis.com/v4/spreadsheets/1RaUU1MMcGxMPK9rB6YMvyBTWJe8L2n_XkAs_iK6XCc8/values/Лист1?key=AIzaSyDpLgHJlPOMMlKG-Ul-5c3RovWkAG_hX14");
+        yield return curentResp.SendWebRequest();
+        string rawResp = curentResp.downloadHandler.text;
+        var rawJson = JSON.Parse(rawResp);
+        var temp = 0;
+        foreach (var itemRawJson in rawJson["values"])
+        {
+            if (temp == 0)
+            {
+                temp = 1;
+                continue;
+            }
+            var parseJson = JSON.Parse(itemRawJson.ToString());
+            var selectRow = parseJson[0].AsStringList;
+            dataSet.Add(selectRow[0], new List<float> 
+            {
+                float.Parse(selectRow[2]),
+                float.Parse(selectRow[3]),
+                float.Parse(selectRow[4]),
+                float.Parse(selectRow[5]) 
+            });
+        }
+    }
+
+    IEnumerator PlayCoinPickup()
+    {
+        statusStart = true;
+        audioSource = GetComponent<AudioSource>();
+        audioSource.clip = coinPickup;
+        audioSource.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        r = Random.Range(0,4);
+        i++;
+    }
+
+    IEnumerator PlayHitZombie()
+    {
+        statusStart = true;
+        audioSource = GetComponent<AudioSource>();
+        audioSource.clip = hitZombie;
+        audioSource.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        r = Random.Range(0,4);
+        i++;
+    }
+
+    IEnumerator PlayBossKill()
+    {
+        statusStart = true;
+        audioSource = GetComponent<AudioSource>();
+        audioSource.clip = bossKill;
+        audioSource.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        r = Random.Range(0,4);
+        i++;
+    }
+
+    IEnumerator PlayChestCollect()
+    {
+        statusStart = true;
+        audioSource = GetComponent<AudioSource>();
+        audioSource.clip = chestCollect;
+        audioSource.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        r = Random.Range(0,4);
+        i++;
+    }
+}
+
+```
 
 ## Задание 4
 ###  Какую сущность(и) мы бы могли "обучить" ML-Agent-ом для того, чтобы создать более качественный игровой опыт?
