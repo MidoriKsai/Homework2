@@ -48,10 +48,19 @@
 
 - Настроить доступ к google-таблице по api
 
-![API](https://github.com/MidoriKsai/Homework2/blob/main/API.png)
+![API](https://github.com/MidoriKsai/Homework2/blob/main/Api.png)
 
 - Сгенерировать данные с помощью Python и передать их в google-таблицу
+
+![Google Sheet](https://github.com/MidoriKsai/Homework2/blob/main/GoogleSheet.png)
+
 - Создать ключ API для передачи данных из google-таблицы в Unity
+
+![APIKey](https://github.com/MidoriKsai/Homework2/blob/main/APIKey.png)
+
+- Добавить звуки в Unity
+
+![Unity](https://github.com/MidoriKsai/Homework2/blob/main/Unity.png)
 
 ### Анализ переменной "игровая валюта" в игре "СПАСТИ РТФ: Выживание"
 
@@ -73,11 +82,86 @@
 
 #### **Схема экономической модели**
 
+![Model](https://github.com/MidoriKsai/Homework2/blob/main/Model.png)
+
+Игровая валюта занимает центральное место в экономической модели, связывая все аспекты прогресса и выживания в игре. Она выступает основным инструментом для улучшений и покупок ресурсов, которые помогают игроку справляться с большим количеством зомби за раз.
+
 ## Задание 2
 ###  С помощью скрипта на языке Python заполнить google-таблицу данными, описывающими игровую валюту в игре “СПАСТИ РТФ:Выживание”. Средствами google-sheets визуализировать данные в google-таблице (построить график / диаграмму и пр.) для наглядного представления выбранной игровой величины. Описать характер изменения этой величины, описать недостатки в реализации этой величины (например, в игре может произойти условие наступления эксплойта) и предложить до 3-х вариантов модификации условий работы с переменной, чтобы сделать игровой опыт лучше..
 
-- Запустить Unity и с помощью VSC вывести "Hello World" на экран
-![Hello World Unity](https://github.com/MidoriKsai/Homework/blob/main/HelloWorld_unity.png)
+- Напишем скрипт для заполнения таблицы
+  
+```python
+import gspread
+import numpy as np
+import random
+
+gc = gspread.service_account(filename='homework2-438509-d20bfeb34125.json')
+sh = gc.open("Homework2")
+
+waves = list(range(1, 11))
+zombie_counts = [i * 10 for i in waves] 
+zombie_rewards = [i for i in waves] 
+
+def get_collector_reward():
+   return random.choice([round(i * 0.1, 1) for i in range(0, 42)])
+
+def get_chest_reward(wave):
+    if wave >= 4:
+        return random.choice(range(10, 101, 10))
+    else:
+        return 0
+
+def get_boss_reward(wave):
+    if wave >= 5:  
+        return zombie_rewards[wave - 1]  
+    return 0 
+
+header = ['Wave', 'Zombie Count', 'Zombie Reward per Zombie', 'Collector Reward',
+'Chest Reward', 'Boss Reward', 'Total Reward']
+worksheet.update('A1:G1', [header])
+
+total_rewards = []
+previous_collector_reward = 0 
+
+for wave in waves:
+    zombie_count = zombie_counts[wave - 1]
+    zombie_reward = zombie_rewards[wave - 1]
+    
+    total_zombie_reward = zombie_count * zombie_reward
+    
+    chest_reward = get_chest_reward(wave)
+    
+    collector_reward = previous_collector_reward + get_collector_reward()
+    previous_collector_reward =  collector_reward
+    
+    boss_reward = get_boss_reward(wave)
+    
+    total_reward = total_zombie_reward + collector_reward + chest_reward + boss_reward
+    
+    total_rewards.append([wave, zombie_count, zombie_reward, collector_reward,
+ chest_reward, boss_reward, total_reward])
+
+for i, reward_row in enumerate(total_rewards):
+    worksheet.update(f'A{i+2}:G{i+2}', [reward_row])
+```
+
+В текущем коде реализована система получения монет, основанная на различных игровых событиях, таких как убийства зомби, получение наград за сундуки, и награды от коллектора.
+
+Награда за зомби:
+Игрок получает монеты за каждое убийство зомби. Не убив всех зомби, пройти волну не получится, поэтому по завершению уровня игрок гарантированно получит (волна * кол-во зомби) монет. Иначе уровень не будет пройден.
+
+Награда за сундуки:
+Сундуки начинают появляться после четвертой волны(как я поняла). Максимальная награда за сундук 10(тоже трудно отследить), сколько сундуков спавнится за 1 волну отследить не удалось, но предположим, что 10. В коде реализован генеротор числа от 10 до 100 с шагом 10
+
+Награда коллектора:
+Коллектор может приносить дополнительную награду за каждую волну. Награда варьируется от 0 до 4.1(рандомное число, трудно подсчитать точно) монет с шагом 0.1. Награда от коллектора накапливается и добавляется к общему количеству монет, полученных игроком на протяжении игры.
+
+Награда за босса:
+Боссы появляются после четвертой волны, и за их убийство игрок получает столько же монет, сколько за обычного зомби. 
+
+Общий учет монет:
+Сумма награз за зомби сундуки и коллектора.
 
 ## Задание 3
 ### Оформить отчет в виде документации на github (markdown-разметка).
