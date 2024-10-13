@@ -48,7 +48,7 @@
 
 - Настроить доступ к google-таблице по api
 
-![Hello World_jupyter](https://github.com/MidoriKsai/Homework/blob/main/HelloWorld_jupyter.png)
+![API](https://github.com/MidoriKsai/Homework2/blob/main/API.png)
 
 - Сгенерировать данные с помощью Python и передать их в google-таблицу
 - Создать ключ API для передачи данных из google-таблицы в Unity
